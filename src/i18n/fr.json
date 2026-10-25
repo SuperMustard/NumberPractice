@@ -69,7 +69,7 @@
 
   "settings.open": "Réglages",
   "settings.title": "Réglages",
-  "settings.close": "Fermer",
+  "dialog.close": "Fermer",
   "settings.rate": "Vitesse de lecture",
   "settings.voice": "Voix ({lang})",
   "settings.voiceAuto": "Automatique : {voice}",
@@ -79,5 +79,21 @@
   "settings.replayLimit": "Réécoutes permises",
   "settings.replay.unlimited": "Illimitées",
   "settings.replay.1": "Une seule (défi)",
-  "settings.replay.0": "Aucune (défi)"
+  "settings.replay.0": "Aucune (défi)",
+
+  "stats.open": "Statistiques",
+  "stats.title": "Vos statistiques",
+  "stats.empty": "Rien pour l’instant. Chaque réponse validée est comptée ; les questions où vous avez cliqué « Voir la réponse » ne le sont pas.",
+  "stats.col.level": "Niveau",
+  "stats.col.answered": "Réponses",
+  "stats.col.accuracy": "Réussite",
+  "stats.col.firstListen": "1re écoute",
+  "stats.col.replays": "Réécoutes",
+  "stats.col.time": "Temps",
+  "stats.legend": "1re écoute : bonne réponse sans réécouter. Réécoutes : moyenne par question. Temps : moyenne entre la fin de la première lecture et la validation.",
+  "stats.seconds": "{s} s",
+  "stats.none": "—",
+  "stats.mistakes": "Erreurs récentes conservées : {n}",
+  "stats.clear": "Effacer les statistiques",
+  "stats.clearConfirm": "Cliquez de nouveau pour tout effacer"
 }

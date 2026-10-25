@@ -69,7 +69,7 @@
 
   "settings.open": "Settings",
   "settings.title": "Settings",
-  "settings.close": "Close",
+  "dialog.close": "Close",
   "settings.rate": "Speech rate",
   "settings.voice": "Voice ({lang})",
   "settings.voiceAuto": "Automatic: {voice}",
@@ -79,5 +79,21 @@
   "settings.replayLimit": "Replays allowed",
   "settings.replay.unlimited": "Unlimited",
   "settings.replay.1": "Once (challenge)",
-  "settings.replay.0": "None (challenge)"
+  "settings.replay.0": "None (challenge)",
+
+  "stats.open": "Stats",
+  "stats.title": "Your stats",
+  "stats.empty": "Nothing yet. Stats count every submitted answer; questions where you clicked “Show answer” are left out.",
+  "stats.col.level": "Level",
+  "stats.col.answered": "Answered",
+  "stats.col.accuracy": "Correct",
+  "stats.col.firstListen": "First listen",
+  "stats.col.replays": "Replays",
+  "stats.col.time": "Time",
+  "stats.legend": "First listen: correct without replaying. Replays: average per question. Time: average from the end of the first playback to submitting.",
+  "stats.seconds": "{s} s",
+  "stats.none": "—",
+  "stats.mistakes": "Recent mistakes saved: {n}",
+  "stats.clear": "Clear stats",
+  "stats.clearConfirm": "Click again to delete all stats"
 }

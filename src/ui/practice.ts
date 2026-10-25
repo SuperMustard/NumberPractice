@@ -4,7 +4,7 @@ import { t } from '../i18n';
 import type { Settings } from '../settings';
 import { type Tts, pickVoice, voicesForLang } from '../speech/tts';
 import type { Question } from '../types';
-import { formatAnswer } from './format';
+import { formatAnswer, groupBreaks } from './format';
 
 // DESIGN.md §8: start → speak → type → Enter submit → feedback → Enter next → speak …
 
@@ -373,10 +373,12 @@ export class Practice {
     if (r.diff) {
       const yours = el('span', 'diff');
       const expected = el('span', 'diff');
-      for (const c of r.diff) {
-        yours.append(el('span', c.ok ? 'ch' : 'ch bad', c.actual));
-        expected.append(el('span', c.ok ? 'ch' : 'ch fix', c.expected));
-      }
+      const breaks = groupBreaks(q.type, r.diff.length);
+      r.diff.forEach((c, i) => {
+        const gap = breaks.has(i) ? ' gap' : '';
+        yours.append(el('span', `ch${c.ok ? '' : ' bad'}${gap}`, c.actual));
+        expected.append(el('span', `ch${c.ok ? '' : ' fix'}${gap}`, c.expected));
+      });
       row(t('feedback.yours'), yours);
       row(t('feedback.expected'), expected);
     } else {

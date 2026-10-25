@@ -1,5 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { formatAnswer, groupDigits } from '../src/ui/format';
+import { formatAnswer, groupBreaks, groupDigits } from '../src/ui/format';
+
+describe('groupBreaks', () => {
+  it.each<[Parameters<typeof groupBreaks>[0], number, number[]]>([
+    ['phone', 7, [3]],
+    ['phone', 10, [3, 6]],
+    ['phone', 11, [1, 4, 7]],
+    ['phone', 9, []],
+    ['cardinal', 3, []],
+    ['cardinal', 4, [1]],
+    ['cardinal', 7, [1, 4]],
+    ['cardinal', 9, [3, 6]],
+    ['year', 4, []],
+    ['time', 5, []],
+  ])('%s of length %i → %o', (type, length, expected) => {
+    expect([...groupBreaks(type, length)].sort((a, b) => a - b)).toEqual(expected);
+  });
+});
 
 describe('groupDigits', () => {
   it.each<[string, string]>([

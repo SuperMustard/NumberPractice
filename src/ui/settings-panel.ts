@@ -123,8 +123,8 @@ export class SettingsPanel {
     const lang = s.practiceLang;
 
     this.$title.textContent = t('settings.title');
-    this.$close.setAttribute('aria-label', t('settings.close'));
-    this.$close.title = t('settings.close');
+    this.$close.setAttribute('aria-label', t('dialog.close'));
+    this.$close.title = t('dialog.close');
 
     this.$rateLabel.textContent = t('settings.rate');
     this.$rate.value = String(s.rate);

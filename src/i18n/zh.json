@@ -69,7 +69,7 @@
 
   "settings.open": "设置",
   "settings.title": "设置",
-  "settings.close": "关闭",
+  "dialog.close": "关闭",
   "settings.rate": "语速",
   "settings.voice": "语音（{lang}）",
   "settings.voiceAuto": "自动：{voice}",
@@ -79,5 +79,21 @@
   "settings.replayLimit": "允许重听",
   "settings.replay.unlimited": "不限次数",
   "settings.replay.1": "1 次（挑战）",
-  "settings.replay.0": "不允许（挑战）"
+  "settings.replay.0": "不允许（挑战）",
+
+  "stats.open": "统计",
+  "stats.title": "练习统计",
+  "stats.empty": "还没有数据。每道提交过的题都会计入；点了“显示答案”的题不计入。",
+  "stats.col.level": "难度",
+  "stats.col.answered": "题数",
+  "stats.col.accuracy": "正确率",
+  "stats.col.firstListen": "一次听懂",
+  "stats.col.replays": "重听",
+  "stats.col.time": "用时",
+  "stats.legend": "一次听懂：没有重听就答对。重听：平均每题重听次数。用时：从第一次朗读结束到提交的平均时间。",
+  "stats.seconds": "{s} 秒",
+  "stats.none": "—",
+  "stats.mistakes": "已保存最近错题：{n} 道",
+  "stats.clear": "清空统计",
+  "stats.clearConfirm": "再点一次确认清空全部统计"
 }
