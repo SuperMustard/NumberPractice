@@ -25,6 +25,16 @@ describe('generateCardinal', () => {
     }
   });
 
+  it('tier 7 mixes every range from tier 1 to 6', () => {
+    const seen = new Set<number>();
+    for (let i = 0; i < 600; i++) {
+      const n = Number(generateCardinal('fr-CA', 7, rng).answer);
+      const tier = Object.entries(ranges).find(([, [min, max]]) => n >= min && n <= max)![0];
+      seen.add(Number(tier));
+    }
+    expect([...seen].sort()).toEqual([1, 2, 3, 4, 5, 6]);
+  });
+
   it('tier 6 has at most 3 significant digits', () => {
     for (let i = 0; i < 300; i++) {
       const digits = generateCardinal('en', 6, rng).answer.replace(/0+$/, '');
@@ -35,7 +45,7 @@ describe('generateCardinal', () => {
 
 describe('tierCount', () => {
   it.each<[PracticeLang, QuestionType, TimeFormat, number]>([
-    ['fr-CA', 'cardinal', '24h', 6],
+    ['fr-CA', 'cardinal', '24h', 7],
     ['fr-CA', 'year', '24h', 4],
     ['fr-CA', 'phone', '24h', 4],
     ['fr-CA', 'time', '24h', 2],

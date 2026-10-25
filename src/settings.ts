@@ -14,7 +14,8 @@ export interface Settings {
   type: QuestionType;
   tier: number;
   rate: number;
-  voiceURI: string | null;
+  /** Chosen voice per practice language; missing = automatic */
+  voiceURIs: Partial<Record<PracticeLang, string>>;
   timeFormat: TimeFormat;
   replayLimit: ReplayLimit;
 }
@@ -39,7 +40,7 @@ export function defaultSettings(navLang?: string): Settings {
     type: 'cardinal',
     tier: 1,
     rate: RATE_DEFAULT,
-    voiceURI: null,
+    voiceURIs: {},
     timeFormat: '24h',
     replayLimit: 'unlimited',
   };
@@ -55,6 +56,16 @@ function oneOf<T>(value: unknown, allowed: readonly T[], fallback: T): T {
   return allowed.includes(value as T) ? (value as T) : fallback;
 }
 
+function parseVoiceURIs(raw: unknown): Settings['voiceURIs'] {
+  const out: Settings['voiceURIs'] = {};
+  if (!raw || typeof raw !== 'object') return out;
+  for (const lang of PRACTICE_LANGS) {
+    const uri = (raw as Record<string, unknown>)[lang];
+    if (typeof uri === 'string') out[lang] = uri;
+  }
+  return out;
+}
+
 /** Validate whatever came out of storage field by field; anything invalid falls back to the default. */
 export function parseSettings(raw: unknown, navLang?: string): Settings {
   const d = defaultSettings(navLang);
@@ -66,7 +77,7 @@ export function parseSettings(raw: unknown, navLang?: string): Settings {
     type: oneOf(r.type, QUESTION_TYPES, d.type),
     tier: typeof r.tier === 'number' ? r.tier : d.tier,
     rate: typeof r.rate === 'number' ? clampRate(r.rate) : d.rate,
-    voiceURI: typeof r.voiceURI === 'string' ? r.voiceURI : null,
+    voiceURIs: parseVoiceURIs(r.voiceURIs),
     timeFormat: oneOf(r.timeFormat, TIME_FORMATS, d.timeFormat),
     replayLimit: oneOf(r.replayLimit, REPLAY_LIMITS, d.replayLimit),
   });

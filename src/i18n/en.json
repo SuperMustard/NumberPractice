@@ -23,6 +23,7 @@
   "tier.cardinal.4": "100–999",
   "tier.cardinal.5": "1,000–999,999",
   "tier.cardinal.6": "Millions",
+  "tier.cardinal.7": "Mixed (all levels)",
   "tier.year.1": "2000–2030",
   "tier.year.2": "1900–1999",
   "tier.year.3": "1000–1899",
@@ -64,5 +65,19 @@
   "lang.en": "English",
   "notice.noTts": "Your browser can't speak text. Try a recent Chrome, Edge, Safari or Firefox.",
   "notice.noVoice": "No {lang} voice was found on this device; your browser will use its default voice.",
-  "notice.noFrCa": "No Canadian French voice was found; using {voice} instead. The accent may differ."
+  "notice.noFrCa": "No Canadian French voice was found; using {voice} instead. The accent may differ.",
+
+  "settings.open": "Settings",
+  "settings.title": "Settings",
+  "settings.close": "Close",
+  "settings.rate": "Speech rate",
+  "settings.voice": "Voice ({lang})",
+  "settings.voiceAuto": "Automatic: {voice}",
+  "settings.voiceAutoNone": "Automatic (browser default)",
+  "settings.voiceNote": "The voice is chosen per practice language.",
+  "settings.preview": "Preview",
+  "settings.replayLimit": "Replays allowed",
+  "settings.replay.unlimited": "Unlimited",
+  "settings.replay.1": "Once (challenge)",
+  "settings.replay.0": "None (challenge)"
 }

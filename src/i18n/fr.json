@@ -23,6 +23,7 @@
   "tier.cardinal.4": "100–999",
   "tier.cardinal.5": "1 000–999 999",
   "tier.cardinal.6": "Millions",
+  "tier.cardinal.7": "Mélange (tous niveaux)",
   "tier.year.1": "2000–2030",
   "tier.year.2": "1900–1999",
   "tier.year.3": "1000–1899",
@@ -64,5 +65,19 @@
   "lang.en": "anglais",
   "notice.noTts": "Votre navigateur ne peut pas lire de texte à voix haute. Essayez une version récente de Chrome, Edge, Safari ou Firefox.",
   "notice.noVoice": "Aucune voix en {lang} sur cet appareil ; le navigateur utilisera sa voix par défaut.",
-  "notice.noFrCa": "Aucune voix en français canadien ; utilisation de {voice}. L’accent peut différer."
+  "notice.noFrCa": "Aucune voix en français canadien ; utilisation de {voice}. L’accent peut différer.",
+
+  "settings.open": "Réglages",
+  "settings.title": "Réglages",
+  "settings.close": "Fermer",
+  "settings.rate": "Vitesse de lecture",
+  "settings.voice": "Voix ({lang})",
+  "settings.voiceAuto": "Automatique : {voice}",
+  "settings.voiceAutoNone": "Automatique (voix par défaut)",
+  "settings.voiceNote": "La voix se choisit pour chaque langue pratiquée.",
+  "settings.preview": "Écouter un exemple",
+  "settings.replayLimit": "Réécoutes permises",
+  "settings.replay.unlimited": "Illimitées",
+  "settings.replay.1": "Une seule (défi)",
+  "settings.replay.0": "Aucune (défi)"
 }

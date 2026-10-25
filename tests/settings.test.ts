@@ -42,7 +42,7 @@ describe('defaultSettings', () => {
       type: 'cardinal',
       tier: 1,
       rate: 1,
-      voiceURI: null,
+      voiceURIs: {},
       timeFormat: '24h',
       replayLimit: 'unlimited',
     });
@@ -57,7 +57,7 @@ describe('parseSettings', () => {
       type: 'time',
       tier: 3,
       rate: 1.2,
-      voiceURI: 'x',
+      voiceURIs: { 'fr-CA': 'x', en: 'y' },
       timeFormat: '12h',
       replayLimit: 1,
     };
@@ -65,12 +65,12 @@ describe('parseSettings', () => {
   });
 
   it('replaces invalid fields with defaults', () => {
-    const s = parseSettings({ practiceLang: 'fr-FR', type: 'price', rate: 5, replayLimit: 2, voiceURI: 3 }, 'en');
+    const s = parseSettings({ practiceLang: 'fr-FR', type: 'price', rate: 5, replayLimit: 2, voiceURIs: { 'fr-CA': 3, en: 'ok', de: 'x' } }, 'en');
     expect(s.practiceLang).toBe('fr-CA');
     expect(s.type).toBe('cardinal');
     expect(s.rate).toBe(1.3);
     expect(s.replayLimit).toBe('unlimited');
-    expect(s.voiceURI).toBeNull();
+    expect(s.voiceURIs).toEqual({ en: 'ok' });
   });
 
   it('resets a tier that does not exist', () => {

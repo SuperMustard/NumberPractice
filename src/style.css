@@ -92,8 +92,83 @@ select {
   max-width: 100%;
 }
 
+.topbar-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .ui-lang {
   min-height: 40px;
+}
+
+.btn-small {
+  min-height: 40px;
+  padding: 6px 12px;
+  font-weight: 500;
+}
+
+.btn-icon {
+  min-height: 40px;
+  min-width: 40px;
+  padding: 0;
+  font-weight: 400;
+}
+
+/* --- Settings dialog --- */
+
+.settings-dialog {
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  padding: 0;
+  color: var(--fg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.settings-dialog::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+
+.dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px 20px 20px;
+}
+
+.dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dialog-head h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+
+.dialog-body .note {
+  margin: -8px 0 0;
+}
+
+.rate-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rate-row input[type='range'] {
+  flex: 1;
+  min-height: 44px;
+  accent-color: var(--accent);
+}
+
+.rate-row output {
+  min-width: 3.5ch;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
 }
 
 /* --- Selection --- */

@@ -11,7 +11,10 @@ const RANGES: Record<number, [number, number]> = {
   5: [1000, 999_999],
 };
 
-export const CARDINAL_TIERS = 6;
+export const CARDINAL_TIERS = 7;
+
+/** Tier 7 draws each question from a random tier 1–6, so every range is equally likely. */
+const MIXED_TIER = 7;
 
 /** Tier 6: 1 000 000–999 000 000 with 2–3 significant digits, e.g. 3 450 000. */
 function roundMillions(rng: Rng): number {
@@ -22,6 +25,7 @@ function roundMillions(rng: Rng): number {
 }
 
 export function generateCardinal(lang: PracticeLang, tier: number, rng: Rng): QuestionBody {
+  if (tier === MIXED_TIER) return generateCardinal(lang, randInt(rng, 1, MIXED_TIER - 1), rng);
   const n = tier === 6 ? roundMillions(rng) : randInt(rng, ...RANGES[tier]);
   return { answer: String(n), display: cardinalWords(lang, n) };
 }

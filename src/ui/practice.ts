@@ -127,6 +127,18 @@ export class Practice {
     else this.next();
   }
 
+  /** Rate / voice / replay limit changed: keep the current question. */
+  optionsChanged(): void {
+    this.refreshVoice();
+    this.render();
+  }
+
+  /** Put the keyboard back on the answer box (e.g. after closing a dialog). */
+  focus(): void {
+    if (this.phase === 'idle') this.$startBtn.focus();
+    else this.$input.focus();
+  }
+
   // --- Actions ---
 
   private next(): void {
@@ -214,6 +226,7 @@ export class Practice {
   private readonly onKey = (e: KeyboardEvent): void => {
     if (e.isComposing || e.keyCode === 229) return; // IME (e.g. Chinese input) is composing
     if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (document.querySelector('dialog[open]')) return; // e.g. Esc closes the settings dialog, not reveal
     const target = e.target as HTMLElement | null;
     const tag = target?.tagName;
     if (tag === 'SELECT' || tag === 'TEXTAREA') return;
@@ -251,7 +264,7 @@ export class Practice {
     const s = this.deps.getSettings();
     const all = tts.getVoices();
     const { voices, hasPreferredRegion } = voicesForLang(all, s.practiceLang);
-    this.voice = pickVoice(all, s.practiceLang, s.voiceURI);
+    this.voice = pickVoice(all, s.practiceLang, s.voiceURIs[s.practiceLang] ?? null);
     if (!this.voicesLoaded) this.voiceStatus = 'ok';
     else if (voices.length === 0) this.voiceStatus = 'noVoice';
     else if (s.practiceLang === 'fr-CA' && !hasPreferredRegion) this.voiceStatus = 'noRegion';

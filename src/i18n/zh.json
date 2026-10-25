@@ -23,6 +23,7 @@
   "tier.cardinal.4": "100–999",
   "tier.cardinal.5": "1,000–999,999",
   "tier.cardinal.6": "百万级",
+  "tier.cardinal.7": "混合（全部难度）",
   "tier.year.1": "2000–2030",
   "tier.year.2": "1900–1999",
   "tier.year.3": "1000–1899",
@@ -64,5 +65,19 @@
   "lang.en": "英语",
   "notice.noTts": "你的浏览器不支持语音朗读，请使用新版 Chrome、Edge、Safari 或 Firefox。",
   "notice.noVoice": "此设备上没有{lang}语音，浏览器将使用默认语音。",
-  "notice.noFrCa": "未找到加拿大法语语音，正在使用 {voice}，口音可能不同。"
+  "notice.noFrCa": "未找到加拿大法语语音，正在使用 {voice}，口音可能不同。",
+
+  "settings.open": "设置",
+  "settings.title": "设置",
+  "settings.close": "关闭",
+  "settings.rate": "语速",
+  "settings.voice": "语音（{lang}）",
+  "settings.voiceAuto": "自动：{voice}",
+  "settings.voiceAutoNone": "自动（浏览器默认）",
+  "settings.voiceNote": "每种练习语言分别选择语音。",
+  "settings.preview": "试听",
+  "settings.replayLimit": "允许重听",
+  "settings.replay.unlimited": "不限次数",
+  "settings.replay.1": "1 次（挑战）",
+  "settings.replay.0": "不允许（挑战）"
 }

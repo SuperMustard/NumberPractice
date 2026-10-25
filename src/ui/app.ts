@@ -14,6 +14,7 @@ import {
 import type { Tts } from '../speech/tts';
 import type { UiLang } from '../types';
 import { Practice } from './practice';
+import { SettingsPanel } from './settings-panel';
 
 // DESIGN.md §13: header, selection, practice card, session score.
 
@@ -55,7 +56,24 @@ export function mountApp(root: HTMLElement, tts: Tts | null): void {
   const title = document.createElement('h1');
   const uiLangSelect = document.createElement('select');
   uiLangSelect.className = 'ui-lang';
-  header.append(title, uiLangSelect);
+  const settingsBtn = document.createElement('button');
+  settingsBtn.type = 'button';
+  settingsBtn.className = 'btn btn-small';
+  const tools = document.createElement('div');
+  tools.className = 'topbar-tools';
+  tools.append(uiLangSelect, settingsBtn);
+  header.append(title, tools);
+
+  const settingsPanel = new SettingsPanel({
+    tts,
+    getSettings: () => settings,
+    update: (patch) => {
+      update(patch);
+      practice.optionsChanged();
+    },
+    onClose: () => practice.focus(),
+  });
+  settingsBtn.addEventListener('click', () => settingsPanel.open());
 
   // Selection
   const selection = document.createElement('section');
@@ -68,13 +86,14 @@ export function mountApp(root: HTMLElement, tts: Tts | null): void {
   formatNotice.className = 'note selection-note';
   selection.append(langField.wrap, typeField.wrap, tierField.wrap, formatField.wrap, formatNotice);
 
-  root.replaceChildren(header, selection, practice.el, practice.scoreEl);
+  root.replaceChildren(header, selection, practice.el, practice.scoreEl, settingsPanel.dialog);
 
   function render(): void {
     document.documentElement.lang = getUiLang();
     document.title = t('app.title');
     title.textContent = t('app.title');
 
+    settingsBtn.textContent = t('settings.open');
     uiLangSelect.setAttribute('aria-label', t('uiLang.label'));
     setOptions(uiLangSelect, UI_LANGS.map((l) => ({ value: l, label: UI_LANG_NAMES[l] })), settings.uiLang);
 
@@ -111,6 +130,7 @@ export function mountApp(root: HTMLElement, tts: Tts | null): void {
     formatNotice.textContent = t('notice.en12hOnly');
 
     practice.render();
+    if (settingsPanel.dialog.open) settingsPanel.render();
   }
 
   function update(patch: Partial<Settings>): void {
