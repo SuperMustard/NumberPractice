@@ -14,4 +14,15 @@ export interface Question {
   display: string;
   /** Text actually sent to TTS, derived from display */
   tts: string;
+  /** Multiplier applied to the user's speech rate for this question */
+  rateFactor?: number;
+  /** Effective time format, set for time questions only */
+  timeFormat?: TimeFormat;
+}
+
+/** What a single generator produces; the dispatcher fills in the rest of Question. */
+export interface QuestionBody {
+  answer: string;
+  display: string;
+  rateFactor?: number;
 }

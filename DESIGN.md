@@ -463,3 +463,13 @@ interface Bucket {
 - **反应时间**：朗读结束前提交，或 `onend` 未触发时，该题不记录反应时间（其他统计照常）
 - **空输入**：按 Enter 时忽略，不算提交
 - **TTS 去连字符**：需实测 `l'après-midi` 去连字符后的读音
+
+生成器实现时的约定：
+
+- **时间分钟取值**：第 1 档整点；第 2 档 1–59 分；第 3 档 5–55 分的 5 分钟步长（不含整点）
+- **法语分钟用阴性**：neuf heures une、dix heures vingt et une（minute 为阴性）
+- **英语时间第 1 档**：读作 two p.m.（不加 o'clock）
+- **英语时间第 3 档的 12 点 / 0 点**：to 形式用 noon / midnight（quarter to noon、ten to midnight，无后缀）；past 形式中 0 点用 midnight（half past midnight），12 点用 twelve + in the afternoon（quarter past twelve in the afternoon）
+- **英语电话的 0**：每题随机选一次 zero 或 oh，整题统一
+- **电话答案**：第 1 档 7 位；第 2、3 档 10 位；第 4 档 11 位，含开头的 1（`18005550172`）
+- **基础数字第 6 档**：先随机有效位数（2–3）和数量级（10⁶–10⁸），再随机有效数字，所以各数量级出现概率相同
