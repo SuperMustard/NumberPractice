@@ -5,6 +5,7 @@
   "select.practiceLang": "Langue pratiquée",
   "select.type": "Type",
   "select.tier": "Niveau",
+  "select.allTiers": "Tout",
   "select.timeFormat": "Horloge",
 
   "type.cardinal": "Nombres",
@@ -23,7 +24,7 @@
   "tier.cardinal.4": "100–999",
   "tier.cardinal.5": "1 000–999 999",
   "tier.cardinal.6": "Millions",
-  "tier.cardinal.7": "Mélange (tous niveaux)",
+  "tier.cardinal.7": "Mélange (ancien réglage)",
   "tier.year.1": "2000–2030",
   "tier.year.2": "1900–1999",
   "tier.year.3": "1000–1899",

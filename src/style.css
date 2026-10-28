@@ -319,6 +319,78 @@ select {
   grid-column: 1 / -1;
 }
 
+/* Cardinal levels: combinable checkbox chips, always a full row. */
+.field-chips {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.field-chips > legend {
+  padding: 0;
+  margin-bottom: 4px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--fg);
+  font: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* The checkbox stays focusable for keyboards and screen readers; the chip itself shows the state. */
+.chip input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+}
+
+.chip:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-fg);
+}
+
+.chip:has(input:focus-visible) {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* The last selected range can't be unchecked. */
+.chip:has(input:disabled) {
+  cursor: default;
+}
+
+.chip-all {
+  border-style: dashed;
+  color: var(--muted);
+}
+
+.chip-all:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .selection-note {
   grid-column: 1 / -1;
   margin: 0;

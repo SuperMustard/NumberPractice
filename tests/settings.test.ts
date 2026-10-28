@@ -6,8 +6,10 @@ import {
   loadSettings,
   normalizeTier,
   parseSettings,
+  pickTier,
   saveSettings,
 } from '../src/settings';
+import { seededRng } from '../src/random';
 
 function memoryStorage(initial: Record<string, string> = {}) {
   const data = { ...initial };
@@ -41,6 +43,7 @@ describe('defaultSettings', () => {
       uiLang: 'zh',
       type: 'cardinal',
       tier: 1,
+      cardinalTiers: [1],
       rate: 1,
       voiceURIs: {},
       timeFormat: '24h',
@@ -56,6 +59,7 @@ describe('parseSettings', () => {
       uiLang: 'fr',
       type: 'time',
       tier: 3,
+      cardinalTiers: [2, 5],
       rate: 1.2,
       voiceURIs: { 'fr-CA': 'x', en: 'y' },
       timeFormat: '12h',
@@ -75,8 +79,23 @@ describe('parseSettings', () => {
 
   it('resets a tier that does not exist', () => {
     expect(parseSettings({ type: 'time', timeFormat: '24h', tier: 3 }).tier).toBe(1);
-    expect(parseSettings({ type: 'cardinal', tier: 6 }).tier).toBe(6);
+    expect(parseSettings({ type: 'year', tier: 4 }).tier).toBe(4);
+    expect(parseSettings({ type: 'cardinal', tier: 7 }).tier).toBe(1);
     expect(parseSettings({ tier: 2.5 }).tier).toBe(1);
+  });
+
+  it('cleans cardinal tiers', () => {
+    expect(parseSettings({ cardinalTiers: [5, 2, 2, 9, 0, 1.5, '3'] }).cardinalTiers).toEqual([2, 5]);
+    expect(parseSettings({ cardinalTiers: [] }).cardinalTiers).toEqual([1]);
+    expect(parseSettings({ cardinalTiers: 'all' }).cardinalTiers).toEqual([1]);
+  });
+
+  it('migrates the single cardinal tier saved before multi-select', () => {
+    expect(parseSettings({ type: 'cardinal', tier: 4 }).cardinalTiers).toEqual([4]);
+    expect(parseSettings({ type: 'cardinal', tier: 7 }).cardinalTiers).toEqual([1, 2, 3, 4, 5, 6]);
+    expect(parseSettings({ type: 'cardinal', tier: 7 }).tier).toBe(1);
+    expect(parseSettings({ type: 'year', tier: 4 }).cardinalTiers).toEqual([1]);
+    expect(parseSettings({ type: 'cardinal', tier: 4, cardinalTiers: [6] }).cardinalTiers).toEqual([6]);
   });
 
   it('handles junk', () => {
@@ -87,10 +106,25 @@ describe('parseSettings', () => {
 
 describe('normalizeTier', () => {
   it('resets when switching to a type or format with fewer tiers', () => {
-    const s = { ...defaultSettings(), type: 'cardinal' as const, tier: 5 };
-    expect(normalizeTier({ ...s, type: 'year' }).tier).toBe(1);
+    const s = { ...defaultSettings(), type: 'phone' as const, tier: 4 };
+    expect(normalizeTier({ ...s, type: 'year' }).tier).toBe(4);
+    expect(normalizeTier({ ...s, type: 'time', timeFormat: '12h' }).tier).toBe(1);
     expect(normalizeTier({ ...s, type: 'time', timeFormat: '12h', tier: 3 }).tier).toBe(3);
     expect(normalizeTier({ ...s, type: 'time', timeFormat: '24h', tier: 3 }).tier).toBe(1);
+  });
+});
+
+describe('pickTier', () => {
+  it('draws every selected cardinal tier and nothing else', () => {
+    const s = { ...defaultSettings(), type: 'cardinal' as const, tier: 1, cardinalTiers: [2, 4, 6] };
+    const rng = seededRng(1);
+    const seen = new Set(Array.from({ length: 200 }, () => pickTier(s, rng)));
+    expect([...seen].sort()).toEqual([2, 4, 6]);
+  });
+
+  it('uses the single tier for other types', () => {
+    const s = { ...defaultSettings(), type: 'year' as const, tier: 3, cardinalTiers: [2, 4] };
+    expect(pickTier(s, seededRng(1))).toBe(3);
   });
 });
 

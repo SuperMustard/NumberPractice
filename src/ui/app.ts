@@ -1,4 +1,5 @@
 import { tierCount } from '../generators';
+import { CARDINAL_TIERS } from '../generators/cardinal';
 import { getUiLang, setUiLang, t } from '../i18n';
 import {
   PRACTICE_LANGS,
@@ -7,6 +8,7 @@ import {
   TIME_FORMATS,
   UI_LANGS,
   browserStorage,
+  cleanCardinalTiers,
   loadSettings,
   normalizeTier,
   saveSettings,
@@ -14,7 +16,7 @@ import {
 import type { Tts } from '../speech/tts';
 import type { UiLang } from '../types';
 import { emptyStats, loadStats, recordAnswer, saveStats } from '../stats';
-import { PRACTICE_LANG_SHORT, tierLabel } from './labels';
+import { PRACTICE_LANG_SHORT, tierDesc, tierLabel } from './labels';
 import { Practice } from './practice';
 import { SettingsPanel } from './settings-panel';
 import { StatsPanel } from './stats-panel';
@@ -69,6 +71,41 @@ function field(): { wrap: HTMLLabelElement; label: HTMLSpanElement; select: HTML
   const select = document.createElement('select');
   wrap.append(label, select);
   return { wrap, label, select };
+}
+
+/** Cardinal ranges are combinable, so they get one checkbox chip each instead of a select. */
+function tierChips(): {
+  wrap: HTMLFieldSetElement;
+  legend: HTMLLegendElement;
+  boxes: HTMLInputElement[];
+  names: HTMLSpanElement[];
+  allBtn: HTMLButtonElement;
+} {
+  const wrap = document.createElement('fieldset');
+  wrap.className = 'field field-chips';
+  const legend = document.createElement('legend');
+  const chips = document.createElement('div');
+  chips.className = 'chips';
+  const boxes: HTMLInputElement[] = [];
+  const names: HTMLSpanElement[] = [];
+  for (let n = 1; n <= CARDINAL_TIERS; n++) {
+    const chip = document.createElement('label');
+    chip.className = 'chip';
+    const box = document.createElement('input');
+    box.type = 'checkbox';
+    box.value = String(n);
+    const name = document.createElement('span');
+    chip.append(box, name);
+    chips.append(chip);
+    boxes.push(box);
+    names.push(name);
+  }
+  const allBtn = document.createElement('button');
+  allBtn.type = 'button';
+  allBtn.className = 'chip chip-all';
+  chips.append(allBtn);
+  wrap.append(legend, chips);
+  return { wrap, legend, boxes, names, allBtn };
 }
 
 export function mountApp(root: HTMLElement, tts: Tts | null): void {
@@ -128,10 +165,18 @@ export function mountApp(root: HTMLElement, tts: Tts | null): void {
   const typeField = field();
   const tierField = field();
   tierField.wrap.classList.add('field-tier');
+  const cardinalTiers = tierChips();
   const formatField = field();
   const formatNotice = document.createElement('p');
   formatNotice.className = 'note selection-note';
-  selection.append(langField.wrap, typeField.wrap, tierField.wrap, formatField.wrap, formatNotice);
+  selection.append(
+    langField.wrap,
+    typeField.wrap,
+    tierField.wrap,
+    cardinalTiers.wrap,
+    formatField.wrap,
+    formatNotice,
+  );
 
   root.replaceChildren(header, selection, practice.el, practice.scoreEl, settingsPanel.dialog, statsPanel.dialog);
 
@@ -154,6 +199,21 @@ export function mountApp(root: HTMLElement, tts: Tts | null): void {
 
     typeField.label.textContent = t('select.type');
     setOptions(typeField.select, QUESTION_TYPES.map((ty) => ({ value: ty, label: t(`type.${ty}`) })), settings.type);
+
+    const isCardinal = settings.type === 'cardinal';
+    tierField.wrap.hidden = isCardinal;
+    cardinalTiers.wrap.hidden = !isCardinal;
+
+    cardinalTiers.legend.textContent = t('select.tier');
+    const selected = settings.cardinalTiers;
+    cardinalTiers.boxes.forEach((box, i) => {
+      box.checked = selected.includes(i + 1);
+      // At least one range must stay selected.
+      box.disabled = box.checked && selected.length === 1;
+      cardinalTiers.names[i].textContent = tierDesc(settings.practiceLang, 'cardinal', i + 1);
+    });
+    cardinalTiers.allBtn.textContent = t('select.allTiers');
+    cardinalTiers.allBtn.disabled = selected.length === CARDINAL_TIERS;
 
     tierField.label.textContent = t('select.tier');
     const count = tierCount(settings.practiceLang, settings.type, settings.timeFormat);
@@ -207,6 +267,18 @@ export function mountApp(root: HTMLElement, tts: Tts | null): void {
   tierField.select.addEventListener(
     'change',
     onPracticeChange(() => ({ tier: Number(tierField.select.value) })),
+  );
+  for (const box of cardinalTiers.boxes) {
+    box.addEventListener(
+      'change',
+      onPracticeChange(() => ({
+        cardinalTiers: cleanCardinalTiers(cardinalTiers.boxes.filter((b) => b.checked).map((b) => Number(b.value))),
+      })),
+    );
+  }
+  cardinalTiers.allBtn.addEventListener(
+    'click',
+    onPracticeChange(() => ({ cardinalTiers: Array.from({ length: CARDINAL_TIERS }, (_, i) => i + 1) })),
   );
   formatField.select.addEventListener(
     'change',

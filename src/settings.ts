@@ -1,4 +1,6 @@
 import { tierCount } from './generators';
+import { CARDINAL_TIERS } from './generators/cardinal';
+import { type Rng, pick } from './random';
 import { RATE_DEFAULT, clampRate } from './speech/tts';
 import type { PracticeLang, QuestionType, TimeFormat, UiLang } from './types';
 
@@ -12,7 +14,10 @@ export interface Settings {
   practiceLang: PracticeLang;
   uiLang: UiLang;
   type: QuestionType;
+  /** Level for year / phone / time; cardinal uses cardinalTiers instead */
   tier: number;
+  /** Cardinal ranges to mix, each question drawn from one at random; sorted, never empty */
+  cardinalTiers: number[];
   rate: number;
   /** Chosen voice per practice language; missing = automatic */
   voiceURIs: Partial<Record<PracticeLang, string>>;
@@ -39,6 +44,7 @@ export function defaultSettings(navLang?: string): Settings {
     uiLang: detectUiLang(navLang),
     type: 'cardinal',
     tier: 1,
+    cardinalTiers: [1],
     rate: RATE_DEFAULT,
     voiceURIs: {},
     timeFormat: '24h',
@@ -50,6 +56,30 @@ export function defaultSettings(navLang?: string): Settings {
 export function normalizeTier(s: Settings): Settings {
   const max = tierCount(s.practiceLang, s.type, s.timeFormat);
   return Number.isInteger(s.tier) && s.tier >= 1 && s.tier <= max ? s : { ...s, tier: 1 };
+}
+
+/** The tiers a question may be drawn from under the current settings. */
+export function activeTiers(s: Settings): number[] {
+  return s.type === 'cardinal' ? s.cardinalTiers : [s.tier];
+}
+
+/** Concrete tier for the next question; stats are kept per this tier, never per selection. */
+export function pickTier(s: Settings, rng: Rng = Math.random): number {
+  return pick(rng, activeTiers(s));
+}
+
+/** Keep valid cardinal tiers, deduped and sorted; empty means "nothing usable". */
+export function cleanCardinalTiers(raw: unknown): number[] {
+  if (!Array.isArray(raw)) return [];
+  const valid = raw.filter((n): n is number => Number.isInteger(n) && n >= 1 && n <= CARDINAL_TIERS);
+  return [...new Set(valid)].sort((a, b) => a - b);
+}
+
+/** Settings saved before multi-select only have `tier`; the old tier 7 meant "mix all". */
+function legacyCardinalTiers(r: Record<string, unknown>): number[] {
+  if (r.type !== 'cardinal' || typeof r.tier !== 'number') return [];
+  if (r.tier === 7) return Array.from({ length: CARDINAL_TIERS }, (_, i) => i + 1);
+  return cleanCardinalTiers([r.tier]);
 }
 
 function oneOf<T>(value: unknown, allowed: readonly T[], fallback: T): T {
@@ -76,6 +106,7 @@ export function parseSettings(raw: unknown, navLang?: string): Settings {
     uiLang: oneOf(r.uiLang, UI_LANGS, d.uiLang),
     type: oneOf(r.type, QUESTION_TYPES, d.type),
     tier: typeof r.tier === 'number' ? r.tier : d.tier,
+    cardinalTiers: [cleanCardinalTiers(r.cardinalTiers), legacyCardinalTiers(r), d.cardinalTiers].find((a) => a.length)!,
     rate: typeof r.rate === 'number' ? clampRate(r.rate) : d.rate,
     voiceURIs: parseVoiceURIs(r.voiceURIs),
     timeFormat: oneOf(r.timeFormat, TIME_FORMATS, d.timeFormat),

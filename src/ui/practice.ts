@@ -1,7 +1,7 @@
 import { type CheckResult, checkAnswer, isBlank } from '../checker';
 import { generateQuestion } from '../generators';
 import { t } from '../i18n';
-import type { Settings } from '../settings';
+import { type Settings, pickTier } from '../settings';
 import { type Tts, pickVoice, voicesForLang } from '../speech/tts';
 import type { Question } from '../types';
 import { formatAnswer, groupBreaks } from './format';
@@ -146,7 +146,7 @@ export class Practice {
     this.q = generateQuestion({
       lang: s.practiceLang,
       type: s.type,
-      tier: s.tier,
+      tier: pickTier(s),
       timeFormat: s.timeFormat,
     });
     this.phase = 'asking';

@@ -115,7 +115,8 @@ interface Question {
 | 4 | 100–999 | cent / cents |
 | 5 | 1 000–999 999 | mille |
 | 6 | 1 000 000–999 999 999 | 只出"取整"的数：保留 2–3 位有效数字，如 3 450 000 |
-| 7 | 混合 | 每题随机选 1–6 档中的一档，各档概率相同 |
+
+难度为**复选**：用户可勾选 1–6 档的任意组合（至少一档），每题从已勾选的档中等概率随机选一档。原"第 7 档 混合"由"全选"代替（见第 17 节）。
 
 ### 5.2 年份（year）
 
@@ -286,7 +287,8 @@ interface Settings {
   practiceLang: PracticeLang;   // 默认 'fr-CA'
   uiLang: UiLang;               // 默认根据 navigator.language，回退 'en'
   type: QuestionType;           // 默认 'cardinal'
-  tier: number;                 // 默认 1
+  tier: number;                 // 默认 1；年份 / 电话 / 时间用
+  cardinalTiers: number[];      // 默认 [1]；基础数字用，复选，升序、去重、非空
   rate: number;                 // 默认 1.0
   voiceURI: string | null;
   timeFormat: TimeFormat;       // 默认 '24h'
@@ -483,4 +485,11 @@ interface Bucket {
 - **清空统计**：不用浏览器确认框，改为按钮点两次（4 秒内再点一次才清空）
 - **英语语音优先级**：en-CA → en-US → 其他 en-*
 - **onend 看门狗**：朗读超过 3 秒 + 每字 150 ms（除以语速）仍未收到 `onend`，视为"未触发"，该题不记反应时间
+- **基础数字难度复选**（2026-10-28）：
+  - 设置新增 `cardinalTiers: number[]`，基础数字题型只看它；`tier` 仍用于其他题型
+  - 每题先从 `cardinalTiers` 中等概率选出一档，题目的 `tier` 记为这一档，统计按实际档位聚合（不存在"组合"桶）
+  - 删除第 7 档（混合），基础数字共 6 档；界面提供"全选"按钮
+  - 界面：难度改为一行可换行的复选标签；最后一个已勾选的档不能取消
+  - 旧设置迁移：没有 `cardinalTiers` 时，按旧的 `type: 'cardinal'` + `tier` 推出（第 7 档 → 全部 6 档）
+  - 旧统计中的 `…:cardinal:7` 桶保留，显示为"混合（旧设置）"
 - **基础数字第 6 档**：先随机有效位数（2–3）和数量级（10⁶–10⁸），再随机有效数字，所以各数量级出现概率相同
