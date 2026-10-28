@@ -28,13 +28,15 @@ describe('bucketKey', () => {
   it('uses lang:type:tier', () => {
     expect(bucketKey({ lang: 'fr-CA', type: 'cardinal', tier: 3 })).toBe('fr-CA:cardinal:3');
   });
-  it('adds the time format for time questions', () => {
-    expect(bucketKey({ lang: 'en', type: 'time', tier: 1, timeFormat: '12h' })).toBe('en:time:12h:1');
+  it('adds the time format and style for time questions', () => {
+    expect(bucketKey({ lang: 'en', type: 'time', tier: 1, timeFormat: '12h', timeStyle: 'colloquial' })).toBe(
+      'en:time:12h:colloquial:1',
+    );
   });
-  it.each(['fr-CA:cardinal:3', 'en:time:12h:1', 'fr-CA:phone:4'])('%s round-trips', (key) => {
+  it.each(['fr-CA:cardinal:3', 'en:time:12h:digits:1', 'fr-CA:time:24h:colloquial:2', 'fr-CA:phone:4'])('%s round-trips', (key) => {
     expect(bucketKey(parseBucketKey(key)!)).toBe(key);
   });
-  it.each(['de:cardinal:1', 'fr-CA:price:1', 'fr-CA:time:1', 'fr-CA:time:9h:1', 'fr-CA:year:x', 'fr-CA:year:1:2'])(
+  it.each(['de:cardinal:1', 'fr-CA:price:1', 'fr-CA:time:1', 'fr-CA:time:9h:1', 'fr-CA:time:12h:1', 'fr-CA:time:12h:mixed:1', 'fr-CA:year:x', 'fr-CA:year:1:2'])(
     'rejects %s',
     (key) => {
       expect(parseBucketKey(key)).toBeNull();
@@ -76,11 +78,17 @@ describe('recordAnswer', () => {
     expect(sum.avgResponseMs).toBe(2000);
   });
 
-  it('keeps time formats apart', () => {
-    let s = recordAnswer(emptyStats(), answer({ question: { type: 'time', timeFormat: '12h', answer: '14:00' } }), 1);
-    s = recordAnswer(s, answer({ question: { type: 'time', timeFormat: '24h', answer: '14:00' }, correct: false }), 2);
-    expect(Object.keys(s.buckets).sort()).toEqual(['fr-CA:time:12h:1', 'fr-CA:time:24h:1']);
-    expect(s.mistakes[0].timeFormat).toBe('24h');
+  it('keeps time formats and styles apart', () => {
+    const time = { type: 'time', answer: '14:00' } as const;
+    let s = recordAnswer(emptyStats(), answer({ question: { ...time, timeFormat: '12h', timeStyle: 'digits' } }), 1);
+    s = recordAnswer(s, answer({ question: { ...time, timeFormat: '24h', timeStyle: 'digits' } }), 2);
+    s = recordAnswer(s, answer({ question: { ...time, timeFormat: '24h', timeStyle: 'colloquial' }, correct: false }), 3);
+    expect(Object.keys(s.buckets).sort()).toEqual([
+      'fr-CA:time:12h:digits:1',
+      'fr-CA:time:24h:colloquial:1',
+      'fr-CA:time:24h:digits:1',
+    ]);
+    expect(s.mistakes[0]).toMatchObject({ timeFormat: '24h', timeStyle: 'colloquial' });
   });
 
   it(`keeps only the newest ${MAX_MISTAKES} mistakes`, () => {
@@ -119,6 +127,27 @@ describe('parseStats', () => {
     });
     expect(s.buckets).toEqual({ 'fr-CA:cardinal:1': good });
     expect(s.mistakes).toHaveLength(1);
+  });
+
+  it('migrates time stats saved before the style option', () => {
+    const b = (n: number) => ({ answered: n, correct: n, correctNoReplay: 0, totalReplays: 0, totalResponseMs: 0, timedCount: 0 });
+    const s = parseStats({
+      buckets: { 'fr-CA:time:12h:1': b(1), 'fr-CA:time:12h:2': b(2), 'fr-CA:time:12h:3': b(3), 'fr-CA:time:24h:2': b(4) },
+      mistakes: [
+        { lang: 'fr-CA', type: 'time', tier: 3, timeFormat: '12h', answer: '14:45', input: '14:15', ts: 1 },
+        { lang: 'fr-CA', type: 'time', tier: 2, timeFormat: '24h', answer: '14:37', input: '14:47', ts: 2 },
+      ],
+    });
+    expect(s.buckets).toEqual({
+      'fr-CA:time:12h:digits:1': b(1),
+      'fr-CA:time:12h:digits:3': b(2),
+      'fr-CA:time:12h:colloquial:2': b(3),
+      'fr-CA:time:24h:digits:3': b(4),
+    });
+    expect(s.mistakes.map((m) => [m.tier, m.timeStyle])).toEqual([
+      [2, 'colloquial'],
+      [3, 'digits'],
+    ]);
   });
 
   it('handles junk', () => {

@@ -152,22 +152,20 @@ interface Question {
 
 ### 5.4 时间（time）
 
-设置项 `timeFormat: '12h' | '24h'`，决定可用的档位和读法。
+三个相互独立的设置：时间制 `timeFormat: '12h' | '24h'`、说法 `timeStyle: 'digits' | 'colloquial' | 'mixed'`、难度档。
 
-**24 小时制**
-
-| 档 | 例子 | 读法 |
+| 档 | 分钟 | 例子 |
 |---|---|---|
-| 1 | 14:00 | quatorze heures |
-| 2 | 09:05 | neuf heures cinq |
+| 1 | 整点 | 14:00 |
+| 2 | 5 分钟步长（5–55） | 14:45 |
+| 3 | 任意分钟（1–59） | 14:37 |
 
-**12 小时制**（必须带时段后缀）
+说法：
+- **数字**：分钟直接读数。24h：quatorze heures quarante-cinq；12h：deux heures quarante-cinq de l'après-midi
+- **口语**：有口语说法的分钟才换说法（见下方"口语表达"），其他分钟仍直接读数
+- **混合**：每题随机（各 50%）用数字或口语
 
-| 档 | 例子 | 读法 |
-|---|---|---|
-| 1 | 14:00 | deux heures de l'après-midi |
-| 2 | 09:05 | neuf heures cinq du matin |
-| 3 | 14:45 | trois heures moins le quart de l'après-midi |
+12 小时制必须带时段后缀。
 
 后缀规则（按**读出来的那个钟点**决定，不是按原始时间；例如 11:45 读作 midi moins le quart）：
 
@@ -179,12 +177,14 @@ interface Question {
 | 18–23 点 | du soir |
 | 0 点 | 读作 **minuit**，无后缀 |
 
-第 3 档口语表达（仅 12 小时制）：
+口语表达（12h 和 24h 都适用）：
 - :15 → et quart
 - :30 → et demie（midi / minuit 后为 **et demi**）
 - :45 → moins le quart（钟点 +1）
-- :35–:55（5 分钟步长，除 :45）→ moins vingt-cinq … moins cinq（钟点 +1）
-- 其他 5 分钟步长直接读分钟：deux heures dix
+- :35、:40、:50、:55 → moins vingt-cinq … moins cinq（钟点 +1）
+- 其他分钟直接读数：3:10 是 trois heures dix，不会说成 quatre heures moins cinquante；3:37 是 trois heures trente-sept，不说 moins vingt-trois
+- 24 小时制口语中，0 点和 12 点读 **minuit** / **midi**：midi et quart、minuit moins dix、11:45 → midi moins le quart
+- 24 小时制口语的 moins 形式（quinze heures moins le quart）语法正确、口语中能听到，但不如 et quart / et demie 常见
 
 法语语法要点：
 - 1 点、21 点用阴性：**une heure**、**vingt et une heures**
@@ -196,7 +196,7 @@ interface Question {
 - 24h：fourteen hundred、oh nine oh five 不自然 → 英语**只提供 12 小时制**，选择 24h 时界面提示并自动使用 12h
 - 12h 第 1 档：two o'clock p.m. / two p.m.
 - 第 2 档：nine oh five a.m.、two thirty-seven p.m.
-- 第 3 档：quarter past two、half past two、twenty to three，后缀 in the morning / in the afternoon / in the evening；noon / midnight
+- 口语：quarter past two、half past two、twenty to three，后缀 in the morning / in the afternoon / in the evening；noon / midnight。只用于 5 分钟步长，其他分钟按数字读（two thirty-seven p.m.）
 
 ---
 
@@ -292,6 +292,7 @@ interface Settings {
   rate: number;                 // 默认 1.0
   voiceURI: string | null;
   timeFormat: TimeFormat;       // 默认 '24h'
+  timeStyle: 'digits' | 'colloquial' | 'mixed';  // 默认 'digits'
   replayLimit: 'unlimited' | 1 | 0;
 }
 ```
@@ -394,22 +395,36 @@ interface Bucket {
 | 01:30 | une heure trente |
 | 00:15 | zéro heure quinze |
 
+### fr-CA 时间（24h 口语）
+| 输入 | 期望 |
+|---|---|
+| 17:15 | dix-sept heures et quart |
+| 17:30 | dix-sept heures et demie |
+| 14:45 | quinze heures moins le quart |
+| 17:50 | dix-huit heures moins dix |
+| 15:10 | quinze heures dix |
+| 15:37 | quinze heures trente-sept |
+| 12:15 | midi et quart |
+| 23:50 | minuit moins dix |
+
 ### fr-CA 时间（12h）
-| 输入 | 档 | 期望 |
+| 输入 | 说法 | 期望 |
 |---|---|---|
-| 14:00 | 1 | deux heures de l'après-midi |
-| 12:00 | 1 | midi |
-| 00:00 | 1 | minuit |
-| 19:05 | 2 | sept heures cinq du soir |
-| 14:37 | 2 | deux heures trente-sept de l'après-midi |
-| 12:37 | 2 | midi trente-sept |
-| 01:15 | 3 | une heure et quart du matin |
-| 02:30 | 3 | deux heures et demie du matin |
-| 12:30 | 3 | midi et demi |
-| 14:45 | 3 | trois heures moins le quart de l'après-midi |
-| 11:45 | 3 | midi moins le quart |
-| 17:50 | 3 | six heures moins dix du soir |
-| 23:40 | 3 | minuit moins vingt |
+| 14:00 | 数字 | deux heures de l'après-midi |
+| 12:00 | 数字 | midi |
+| 00:00 | 数字 | minuit |
+| 19:05 | 数字 | sept heures cinq du soir |
+| 14:37 | 数字 | deux heures trente-sept de l'après-midi |
+| 12:37 | 数字 | midi trente-sept |
+| 01:15 | 口语 | une heure et quart du matin |
+| 02:30 | 口语 | deux heures et demie du matin |
+| 12:30 | 口语 | midi et demi |
+| 14:45 | 口语 | trois heures moins le quart de l'après-midi |
+| 11:45 | 口语 | midi moins le quart |
+| 17:50 | 口语 | six heures moins dix du soir |
+| 23:40 | 口语 | minuit moins vingt |
+| 03:10 | 口语 | trois heures dix du matin |
+| 03:37 | 口语 | trois heures trente-sept du matin |
 
 ### 英语
 | 输入 | 期望 |
@@ -420,8 +435,8 @@ interface Bucket {
 | 1900（年份） | nineteen hundred |
 | 1905（年份） | nineteen oh five |
 | 2005（年份） | two thousand five |
-| 14:15（12h 第 3 档） | quarter past two in the afternoon |
-| 14:40（12h 第 3 档） | twenty to three in the afternoon |
+| 14:15（12h 口语） | quarter past two in the afternoon |
+| 14:40（12h 口语） | twenty to three in the afternoon |
 | 12:00 | noon |
 
 ### checker
@@ -461,7 +476,7 @@ interface Bucket {
 - **英语电话第 3 档**：与第 2 档相同，逐位读
 - **英语时间 12 点**：只有 12:00 / 00:00 读 noon / midnight；带分钟时读 twelve fifteen、twelve thirty-seven p.m. 等
 - **12h / 24h 切换**：与切换语言、题型相同，tier 超出新档数时重置为 1
-- **统计聚合键**：时间题型加入时间制，如 `fr-CA:time:12h:1`；其他题型仍为 `${lang}:${type}:${tier}`
+- **统计聚合键**：时间题型加入时间制和说法，如 `fr-CA:time:12h:digits:1`；其他题型仍为 `${lang}:${type}:${tier}`
 - **时间输入补充**：纯 `14` / `9` 视为整点；三位数 `915` 视为 09:15；`24:00` 视为 00:00
 - **反应时间**：朗读结束前提交，或 `onend` 未触发时，该题不记录反应时间（其他统计照常）
 - **空输入**：按 Enter 时忽略，不算提交
@@ -469,10 +484,10 @@ interface Bucket {
 
 生成器实现时的约定：
 
-- **时间分钟取值**：第 1 档整点；第 2 档 1–59 分；第 3 档 5–55 分的 5 分钟步长（不含整点）
+- **时间分钟取值**：第 1 档整点；第 2 档 5–55 分的 5 分钟步长；第 3 档 1–59 分（见下方"时间说法选项"）
 - **法语分钟用阴性**：neuf heures une、dix heures vingt et une（minute 为阴性）
 - **英语时间第 1 档**：读作 two p.m.（不加 o'clock）
-- **英语时间第 3 档的 12 点 / 0 点**：to 形式用 noon / midnight（quarter to noon、ten to midnight，无后缀）；past 形式中 0 点用 midnight（half past midnight），12 点用 twelve + in the afternoon（quarter past twelve in the afternoon）
+- **英语时间口语的 12 点 / 0 点**：to 形式用 noon / midnight（quarter to noon、ten to midnight，无后缀）；past 形式中 0 点用 midnight（half past midnight），12 点用 twelve + in the afternoon（quarter past twelve in the afternoon）
 - **英语电话的 0**：每题随机选一次 zero 或 oh，整题统一
 - **电话答案**：第 1 档 7 位；第 2、3 档 10 位；第 4 档 11 位，含开头的 1（`18005550172`）
 - **电话判分**：输入开头的 1 可有可无。第 4 档写 `800 555-0172` 算对；10 位答案写 `1 514 555-0172` 也算对；7 位答案不做此处理
@@ -485,6 +500,12 @@ interface Bucket {
 - **清空统计**：不用浏览器确认框，改为按钮点两次（4 秒内再点一次才清空）
 - **英语语音优先级**：en-CA → en-US → 其他 en-*
 - **onend 看门狗**：朗读超过 3 秒 + 每字 150 ms（除以语速）仍未收到 `onend`，视为"未触发"，该题不记反应时间
+- **时间说法选项**（2026-10-28，取代原 12h 第 3 档）：
+  - 设置新增 `timeStyle`（数字 / 口语 / 混合），与时间制、难度互相独立；12h、24h 都可用口语
+  - 难度统一为 3 档：1 整点、2 五分钟步长、3 任意分钟，12h / 24h 档数相同
+  - `Question.timeStyle` 记实际使用的说法（混合模式下每题已确定为 digits 或 colloquial）
+  - 统计聚合键加入说法：`fr-CA:time:12h:colloquial:2`；错题记录额外存 `timeStyle`
+  - 旧数据迁移（设置、统计桶、错题）：旧第 2 档（任意分钟）→ 新第 3 档 + 数字；旧 12h 第 3 档（口语 5 分钟）→ 新第 2 档 + 口语；第 1 档不变
 - **基础数字难度复选**（2026-10-28）：
   - 设置新增 `cardinalTiers: number[]`，基础数字题型只看它；`tier` 仍用于其他题型
   - 每题先从 `cardinalTiers` 中等概率选出一档，题目的 `tier` 记为这一档，统计按实际档位聚合（不存在"组合"桶）

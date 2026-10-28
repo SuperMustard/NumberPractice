@@ -108,20 +108,25 @@ export class StatsPanel {
       return;
     }
 
-    // One table per practice language + type (+ time format).
+    // One table per practice language + type (+ time format and style).
     const groups = new Map<string, typeof entries>();
     for (const e of entries) {
-      const g = `${e.id.lang}|${e.id.type}|${e.id.timeFormat ?? ''}`;
+      const g = `${e.id.lang}|${e.id.type}|${e.id.timeFormat ?? ''}|${e.id.timeStyle ?? ''}`;
       if (!groups.has(g)) groups.set(g, []);
       groups.get(g)!.push(e);
     }
 
     const sections = [...groups.values()].map((rows) => {
-      const { lang, type, timeFormat } = rows[0].id;
+      const { lang, type, timeFormat, timeStyle } = rows[0].id;
       const section = document.createElement('section');
       section.className = 'stats-group';
       const h = document.createElement('h3');
-      h.textContent = [PRACTICE_LANG_NAMES[lang], t(`type.${type}`), timeFormat ? t(`timeFormat.${timeFormat}`) : '']
+      h.textContent = [
+        PRACTICE_LANG_NAMES[lang],
+        t(`type.${type}`),
+        timeFormat ? t(`timeFormat.${timeFormat}`) : '',
+        timeStyle ? t(`timeStyle.${timeStyle}`) : '',
+      ]
         .filter(Boolean)
         .join(' · ');
       section.append(h, this.table(rows));

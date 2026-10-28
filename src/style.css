@@ -314,8 +314,8 @@ select {
   width: 100%;
 }
 
-/* Level labels are the longest, so the level picker gets a full row unless the clock picker sits beside it. */
-.selection:not(.is-time) .field-tier {
+/* Level labels are the longest, so the level picker gets a full row (clock and style share the next one). */
+.field-tier {
   grid-column: 1 / -1;
 }
 

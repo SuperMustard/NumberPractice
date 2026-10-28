@@ -3,6 +3,7 @@ import { generateCardinal } from '../src/generators/cardinal';
 import { generateQuestion, tierCount } from '../src/generators';
 import { seededRng } from '../src/random';
 import { deriveTts } from '../src/speech/tts-text';
+import type { TimeStyleSetting } from '../src/settings';
 import type { PracticeLang, QuestionType, TimeFormat } from '../src/types';
 
 describe('generateCardinal', () => {
@@ -34,15 +35,13 @@ describe('generateCardinal', () => {
 });
 
 describe('tierCount', () => {
-  it.each<[PracticeLang, QuestionType, TimeFormat, number]>([
-    ['fr-CA', 'cardinal', '24h', 6],
-    ['fr-CA', 'year', '24h', 4],
-    ['fr-CA', 'phone', '24h', 4],
-    ['fr-CA', 'time', '24h', 2],
-    ['fr-CA', 'time', '12h', 3],
-    ['en', 'time', '24h', 3], // English always uses 12h
-  ])('%s %s %s → %i', (lang, type, format, expected) => {
-    expect(tierCount(lang, type, format)).toBe(expected);
+  it.each<[QuestionType, number]>([
+    ['cardinal', 6],
+    ['year', 4],
+    ['phone', 4],
+    ['time', 3],
+  ])('%s → %i', (type, expected) => {
+    expect(tierCount(type)).toBe(expected);
   });
 });
 
@@ -51,20 +50,22 @@ describe('generateQuestion', () => {
   const langs: PracticeLang[] = ['fr-CA', 'en'];
   const types: QuestionType[] = ['cardinal', 'year', 'phone', 'time'];
   const formats: TimeFormat[] = ['12h', '24h'];
+  const styles: TimeStyleSetting[] = ['digits', 'colloquial', 'mixed'];
 
-  it('produces a complete question for every lang/type/tier/format', () => {
+  it('produces a complete question for every lang/type/tier/format/style', () => {
     for (const lang of langs) {
       for (const type of types) {
         for (const timeFormat of formats) {
-          const count = tierCount(lang, type, timeFormat);
-          for (let tier = 1; tier <= count; tier++) {
-            for (let i = 0; i < 20; i++) {
-              const q = generateQuestion({ lang, type, tier, timeFormat }, rng);
-              expect(q).toMatchObject({ lang, type, tier });
-              expect(q.id).toBeTruthy();
-              expect(q.display).toBeTruthy();
-              expect(q.tts).toBe(deriveTts(q.display));
-              expect(q.answer).toMatch(type === 'time' ? /^\d\d:\d\d$/ : /^\d+$/);
+          for (const timeStyle of styles) {
+            for (let tier = 1; tier <= tierCount(type); tier++) {
+              for (let i = 0; i < 10; i++) {
+                const q = generateQuestion({ lang, type, tier, timeFormat, timeStyle }, rng);
+                expect(q).toMatchObject({ lang, type, tier });
+                expect(q.id).toBeTruthy();
+                expect(q.display).toBeTruthy();
+                expect(q.tts).toBe(deriveTts(q.display));
+                expect(q.answer).toMatch(type === 'time' ? /^\d\d:\d\d$/ : /^\d+$/);
+              }
             }
           }
         }
@@ -72,19 +73,34 @@ describe('generateQuestion', () => {
     }
   });
 
-  it('records the effective time format on time questions only', () => {
-    expect(generateQuestion({ lang: 'en', type: 'time', tier: 1, timeFormat: '24h' }, rng).timeFormat).toBe('12h');
-    expect(generateQuestion({ lang: 'fr-CA', type: 'time', tier: 1, timeFormat: '24h' }, rng).timeFormat).toBe('24h');
-    expect(generateQuestion({ lang: 'fr-CA', type: 'year', tier: 1, timeFormat: '24h' }, rng).timeFormat).toBeUndefined();
+  const base = { tier: 1, timeFormat: '24h', timeStyle: 'digits' } as const;
+
+  it('records the effective time format and style on time questions only', () => {
+    expect(generateQuestion({ ...base, lang: 'en', type: 'time' }, rng).timeFormat).toBe('12h');
+    expect(generateQuestion({ ...base, lang: 'fr-CA', type: 'time' }, rng)).toMatchObject({
+      timeFormat: '24h',
+      timeStyle: 'digits',
+    });
+    const year = generateQuestion({ ...base, lang: 'fr-CA', type: 'year' }, rng);
+    expect(year.timeFormat).toBeUndefined();
+    expect(year.timeStyle).toBeUndefined();
+  });
+
+  it('mixed style resolves to both styles, never to "mixed"', () => {
+    const seen = new Set<string | undefined>();
+    for (let i = 0; i < 100; i++) {
+      seen.add(generateQuestion({ ...base, lang: 'fr-CA', type: 'time', timeStyle: 'mixed' }, rng).timeStyle);
+    }
+    expect([...seen].sort()).toEqual(['colloquial', 'digits']);
   });
 
   it('rejects tiers out of range', () => {
-    expect(() => generateQuestion({ lang: 'fr-CA', type: 'time', tier: 3, timeFormat: '24h' }, rng)).toThrow(RangeError);
-    expect(() => generateQuestion({ lang: 'fr-CA', type: 'cardinal', tier: 0, timeFormat: '24h' }, rng)).toThrow(RangeError);
+    expect(() => generateQuestion({ ...base, lang: 'fr-CA', type: 'time', tier: 4 }, rng)).toThrow(RangeError);
+    expect(() => generateQuestion({ ...base, lang: 'fr-CA', type: 'cardinal', tier: 0 }, rng)).toThrow(RangeError);
   });
 
   it('is reproducible with the same seed', () => {
-    const params = { lang: 'fr-CA', type: 'phone', tier: 3, timeFormat: '24h' } as const;
+    const params = { ...base, lang: 'fr-CA', type: 'phone', tier: 3 } as const;
     expect(generateQuestion(params, seededRng(5))).toEqual(generateQuestion(params, seededRng(5)));
   });
 });

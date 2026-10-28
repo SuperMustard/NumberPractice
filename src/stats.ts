@@ -1,5 +1,5 @@
 import { PRACTICE_LANGS, QUESTION_TYPES, TIME_FORMATS, type StorageLike } from './settings';
-import type { PracticeLang, Question, QuestionType, TimeFormat } from './types';
+import type { PracticeLang, Question, QuestionType, TimeFormat, TimeStyle } from './types';
 
 // DESIGN.md §11 and §17. Only submitted questions are recorded; revealed ones never reach here.
 
@@ -23,6 +23,7 @@ export interface Mistake {
   type: QuestionType;
   tier: number;
   timeFormat?: TimeFormat;
+  timeStyle?: TimeStyle;
   answer: string;
   input: string;
   ts: number;
@@ -35,7 +36,7 @@ export interface Stats {
 }
 
 export interface AnswerInput {
-  question: Pick<Question, 'lang' | 'type' | 'tier' | 'answer' | 'timeFormat'>;
+  question: Pick<Question, 'lang' | 'type' | 'tier' | 'answer' | 'timeFormat' | 'timeStyle'>;
   input: string;
   correct: boolean;
   replays: number;
@@ -47,7 +48,10 @@ export interface BucketId {
   type: QuestionType;
   tier: number;
   timeFormat?: TimeFormat;
+  timeStyle?: TimeStyle;
 }
+
+const TIME_STYLES: readonly TimeStyle[] = ['digits', 'colloquial'];
 
 export function emptyStats(): Stats {
   return { buckets: {}, mistakes: [] };
@@ -57,11 +61,21 @@ function emptyBucket(): Bucket {
   return { answered: 0, correct: 0, correctNoReplay: 0, totalReplays: 0, totalResponseMs: 0, timedCount: 0 };
 }
 
-/** `fr-CA:cardinal:3`, or `fr-CA:time:12h:1` for time questions. */
+/** `fr-CA:cardinal:3`, or `fr-CA:time:12h:colloquial:2` for time questions. */
 export function bucketKey(id: BucketId): string {
   return id.type === 'time'
-    ? `${id.lang}:time:${id.timeFormat ?? '24h'}:${id.tier}`
+    ? `${id.lang}:time:${id.timeFormat ?? '24h'}:${id.timeStyle ?? 'digits'}:${id.tier}`
     : `${id.lang}:${id.type}:${id.tier}`;
+}
+
+/**
+ * Time tiers before the style option: 1 on the hour, 2 any minute, 3 (12h only) colloquial five-minute steps.
+ * Now: 1 on the hour, 2 five-minute steps, 3 any minute, with the style kept separately.
+ */
+function migrateLegacyTimeTier(tier: number): { tier: number; timeStyle: TimeStyle } {
+  if (tier === 2) return { tier: 3, timeStyle: 'digits' };
+  if (tier === 3) return { tier: 2, timeStyle: 'colloquial' };
+  return { tier, timeStyle: 'digits' };
 }
 
 export function parseBucketKey(key: string): BucketId | null {
@@ -71,9 +85,11 @@ export function parseBucketKey(key: string): BucketId | null {
   if (!PRACTICE_LANGS.includes(lang) || !QUESTION_TYPES.includes(type)) return null;
   if (type === 'time') {
     const timeFormat = parts[2] as TimeFormat;
-    const tier = Number(parts[3]);
-    if (parts.length !== 4 || !TIME_FORMATS.includes(timeFormat) || !Number.isInteger(tier)) return null;
-    return { lang, type, timeFormat, tier };
+    const timeStyle = parts[3] as TimeStyle;
+    const tier = Number(parts[4]);
+    if (parts.length !== 5 || !TIME_FORMATS.includes(timeFormat) || !TIME_STYLES.includes(timeStyle)) return null;
+    if (!Number.isInteger(tier)) return null;
+    return { lang, type, timeFormat, timeStyle, tier };
   }
   const tier = Number(parts[2]);
   if (parts.length !== 3 || !Number.isInteger(tier)) return null;
@@ -100,6 +116,7 @@ export function recordAnswer(stats: Stats, a: AnswerInput, now: number): Stats {
   if (!a.correct) {
     const m: Mistake = { lang: q.lang, type: q.type, tier: q.tier, answer: q.answer, input: a.input, ts: now };
     if (q.type === 'time' && q.timeFormat) m.timeFormat = q.timeFormat;
+    if (q.type === 'time' && q.timeStyle) m.timeStyle = q.timeStyle;
     mistakes = [...mistakes, m].slice(-MAX_MISTAKES);
   }
 
@@ -162,7 +179,17 @@ function parseMistake(raw: unknown): Mistake | null {
     ts: r.ts,
   };
   if (TIME_FORMATS.includes(r.timeFormat as TimeFormat)) m.timeFormat = r.timeFormat as TimeFormat;
+  if (TIME_STYLES.includes(r.timeStyle as TimeStyle)) m.timeStyle = r.timeStyle as TimeStyle;
+  else if (m.type === 'time') Object.assign(m, migrateLegacyTimeTier(m.tier));
   return m;
+}
+
+/** `fr-CA:time:12h:3` (before the style option) → `fr-CA:time:12h:colloquial:2`; null if not such a key. */
+function migrateLegacyKey(key: string): string | null {
+  const [lang, type, timeFormat, tier, ...rest] = key.split(':');
+  if (type !== 'time' || rest.length) return null;
+  const id = parseBucketKey(`${lang}:time:${timeFormat}:digits:${tier}`);
+  return id && bucketKey({ ...id, ...migrateLegacyTimeTier(id.tier) });
 }
 
 /** Drop anything malformed rather than throwing away all stats. */
@@ -172,9 +199,10 @@ export function parseStats(raw: unknown): Stats {
   const r = raw as Record<string, unknown>;
 
   if (r.buckets && typeof r.buckets === 'object') {
-    for (const [key, value] of Object.entries(r.buckets)) {
+    for (const [raw, value] of Object.entries(r.buckets)) {
       const b = parseBucket(value);
-      if (b && parseBucketKey(key)) stats.buckets[key] = b;
+      const key = parseBucketKey(raw) ? raw : migrateLegacyKey(raw);
+      if (b && key) stats.buckets[key] = b;
     }
   }
   if (Array.isArray(r.mistakes)) {

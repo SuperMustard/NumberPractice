@@ -7,6 +7,7 @@
   "select.tier": "难度",
   "select.allTiers": "全选",
   "select.timeFormat": "时间制",
+  "select.timeStyle": "说法",
 
   "type.cardinal": "数字",
   "type.year": "年份",
@@ -15,6 +16,9 @@
 
   "timeFormat.24h": "24 小时制",
   "timeFormat.12h": "12 小时制",
+  "timeStyle.digits": "数字",
+  "timeStyle.colloquial": "口语（一刻、半、差几分）",
+  "timeStyle.mixed": "混合",
   "notice.en12hOnly": "英语时间只练习 12 小时制。",
 
   "tier.option": "{n} · {desc}",
@@ -35,8 +39,8 @@
   "tier.phone.3.en": "10 位",
   "tier.phone.4": "1 800 号码",
   "tier.time.1": "整点",
-  "tier.time.2": "时和分",
-  "tier.time.3": "一刻、半、差几分",
+  "tier.time.2": "每 5 分钟",
+  "tier.time.3": "任意分钟",
 
   "practice.start": "开始",
   "practice.startHint": "请打开声音。听完后输入听到的内容，按 Enter 提交。",

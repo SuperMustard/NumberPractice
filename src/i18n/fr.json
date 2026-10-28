@@ -7,6 +7,7 @@
   "select.tier": "Niveau",
   "select.allTiers": "Tout",
   "select.timeFormat": "Horloge",
+  "select.timeStyle": "Formulation",
 
   "type.cardinal": "Nombres",
   "type.year": "Années",
@@ -15,6 +16,9 @@
 
   "timeFormat.24h": "24 heures",
   "timeFormat.12h": "12 heures",
+  "timeStyle.digits": "Chiffres",
+  "timeStyle.colloquial": "Familière (et quart, moins dix…)",
+  "timeStyle.mixed": "Mélange",
   "notice.en12hOnly": "En anglais, l’heure se pratique sur 12 heures.",
 
   "tier.option": "{n} · {desc}",
@@ -35,8 +39,8 @@
   "tier.phone.3.en": "10 chiffres",
   "tier.phone.4": "Numéros 1 800",
   "tier.time.1": "Heures pile",
-  "tier.time.2": "Heures et minutes",
-  "tier.time.3": "Et quart, et demie, moins…",
+  "tier.time.2": "Toutes les 5 minutes",
+  "tier.time.3": "Minutes quelconques",
 
   "practice.start": "Commencer",
   "practice.startHint": "Activez le son. Écoutez, tapez ce que vous entendez, appuyez sur Entrée.",

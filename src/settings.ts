@@ -2,13 +2,14 @@ import { tierCount } from './generators';
 import { CARDINAL_TIERS } from './generators/cardinal';
 import { type Rng, pick } from './random';
 import { RATE_DEFAULT, clampRate } from './speech/tts';
-import type { PracticeLang, QuestionType, TimeFormat, UiLang } from './types';
+import type { PracticeLang, QuestionType, TimeFormat, TimeStyle, UiLang } from './types';
 
 // DESIGN.md §10
 
 export const SETTINGS_KEY = 'nd.settings.v1';
 
 export type ReplayLimit = 'unlimited' | 1 | 0;
+export type TimeStyleSetting = TimeStyle | 'mixed';
 
 export interface Settings {
   practiceLang: PracticeLang;
@@ -22,6 +23,7 @@ export interface Settings {
   /** Chosen voice per practice language; missing = automatic */
   voiceURIs: Partial<Record<PracticeLang, string>>;
   timeFormat: TimeFormat;
+  timeStyle: TimeStyleSetting;
   replayLimit: ReplayLimit;
 }
 
@@ -29,6 +31,7 @@ export const PRACTICE_LANGS: readonly PracticeLang[] = ['fr-CA', 'en'];
 export const UI_LANGS: readonly UiLang[] = ['fr', 'en', 'zh'];
 export const QUESTION_TYPES: readonly QuestionType[] = ['cardinal', 'year', 'phone', 'time'];
 export const TIME_FORMATS: readonly TimeFormat[] = ['24h', '12h'];
+export const TIME_STYLES: readonly TimeStyleSetting[] = ['digits', 'colloquial', 'mixed'];
 export const REPLAY_LIMITS: readonly ReplayLimit[] = ['unlimited', 1, 0];
 
 export function detectUiLang(navLang: string | undefined): UiLang {
@@ -48,13 +51,14 @@ export function defaultSettings(navLang?: string): Settings {
     rate: RATE_DEFAULT,
     voiceURIs: {},
     timeFormat: '24h',
+    timeStyle: 'digits',
     replayLimit: 'unlimited',
   };
 }
 
-/** Reset tier to 1 when it doesn't exist for the current lang / type / time format. */
+/** Reset tier to 1 when it doesn't exist for the current type. */
 export function normalizeTier(s: Settings): Settings {
-  const max = tierCount(s.practiceLang, s.type, s.timeFormat);
+  const max = tierCount(s.type);
   return Number.isInteger(s.tier) && s.tier >= 1 && s.tier <= max ? s : { ...s, tier: 1 };
 }
 
@@ -82,6 +86,17 @@ function legacyCardinalTiers(r: Record<string, unknown>): number[] {
   return cleanCardinalTiers([r.tier]);
 }
 
+/**
+ * Time settings saved before the style option: tier 2 was any minute (now 3),
+ * and 12h tier 3 was colloquial five-minute steps (now tier 2 + colloquial).
+ */
+function migrateLegacyTime(r: Record<string, unknown>): Record<string, unknown> {
+  if (r.timeStyle !== undefined || r.type !== 'time') return r;
+  if (r.tier === 2) return { ...r, tier: 3 };
+  if (r.tier === 3) return { ...r, tier: 2, timeStyle: 'colloquial' };
+  return r;
+}
+
 function oneOf<T>(value: unknown, allowed: readonly T[], fallback: T): T {
   return allowed.includes(value as T) ? (value as T) : fallback;
 }
@@ -100,7 +115,7 @@ function parseVoiceURIs(raw: unknown): Settings['voiceURIs'] {
 export function parseSettings(raw: unknown, navLang?: string): Settings {
   const d = defaultSettings(navLang);
   if (!raw || typeof raw !== 'object') return d;
-  const r = raw as Record<string, unknown>;
+  const r = migrateLegacyTime(raw as Record<string, unknown>);
   return normalizeTier({
     practiceLang: oneOf(r.practiceLang, PRACTICE_LANGS, d.practiceLang),
     uiLang: oneOf(r.uiLang, UI_LANGS, d.uiLang),
@@ -110,6 +125,7 @@ export function parseSettings(raw: unknown, navLang?: string): Settings {
     rate: typeof r.rate === 'number' ? clampRate(r.rate) : d.rate,
     voiceURIs: parseVoiceURIs(r.voiceURIs),
     timeFormat: oneOf(r.timeFormat, TIME_FORMATS, d.timeFormat),
+    timeStyle: oneOf(r.timeStyle, TIME_STYLES, d.timeStyle),
     replayLimit: oneOf(r.replayLimit, REPLAY_LIMITS, d.replayLimit),
   });
 }

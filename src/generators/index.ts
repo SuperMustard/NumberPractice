@@ -1,9 +1,9 @@
-import type { Rng } from '../random';
+import { type Rng, chance } from '../random';
 import { deriveTts } from '../speech/tts-text';
-import type { PracticeLang, Question, QuestionBody, QuestionType, TimeFormat } from '../types';
+import type { PracticeLang, Question, QuestionBody, QuestionType, TimeFormat, TimeStyle } from '../types';
 import { CARDINAL_TIERS, generateCardinal } from './cardinal';
 import { PHONE_TIERS, generatePhone } from './phone';
-import { effectiveTimeFormat, generateTime, timeTierCount } from './time';
+import { TIME_TIERS, effectiveTimeFormat, generateTime } from './time';
 import { YEAR_TIERS, generateYear } from './year';
 
 export { effectiveTimeFormat } from './time';
@@ -13,9 +13,11 @@ export interface GenerateParams {
   type: QuestionType;
   tier: number;
   timeFormat: TimeFormat;
+  /** 'mixed' picks digits or colloquial per question, half and half */
+  timeStyle: TimeStyle | 'mixed';
 }
 
-export function tierCount(lang: PracticeLang, type: QuestionType, timeFormat: TimeFormat): number {
+export function tierCount(type: QuestionType): number {
   switch (type) {
     case 'cardinal':
       return CARDINAL_TIERS;
@@ -24,7 +26,7 @@ export function tierCount(lang: PracticeLang, type: QuestionType, timeFormat: Ti
     case 'phone':
       return PHONE_TIERS;
     case 'time':
-      return timeTierCount(lang, timeFormat);
+      return TIME_TIERS;
   }
 }
 
@@ -34,12 +36,14 @@ function makeId(rng: Rng): string {
 
 export function generateQuestion(params: GenerateParams, rng: Rng = Math.random): Question {
   const { lang, type, tier } = params;
-  const count = tierCount(lang, type, params.timeFormat);
+  const count = tierCount(type);
   if (!Number.isInteger(tier) || tier < 1 || tier > count) {
     throw new RangeError(`No tier ${tier} for ${lang}/${type} (1–${count})`);
   }
 
   const timeFormat = effectiveTimeFormat(lang, params.timeFormat);
+  const timeStyle: TimeStyle =
+    params.timeStyle === 'mixed' ? (chance(rng, 0.5) ? 'colloquial' : 'digits') : params.timeStyle;
   let body: QuestionBody;
   switch (type) {
     case 'cardinal':
@@ -52,7 +56,7 @@ export function generateQuestion(params: GenerateParams, rng: Rng = Math.random)
       body = generatePhone(lang, tier, rng);
       break;
     case 'time':
-      body = generateTime(lang, tier, timeFormat, rng);
+      body = generateTime(lang, tier, timeFormat, timeStyle === 'colloquial', rng);
       break;
   }
 
@@ -63,6 +67,6 @@ export function generateQuestion(params: GenerateParams, rng: Rng = Math.random)
     tier,
     ...body,
     tts: deriveTts(body.display),
-    ...(type === 'time' && { timeFormat }),
+    ...(type === 'time' && { timeFormat, timeStyle }),
   };
 }

@@ -148,6 +148,7 @@ export class Practice {
       type: s.type,
       tier: pickTier(s),
       timeFormat: s.timeFormat,
+      timeStyle: s.timeStyle,
     });
     this.phase = 'asking';
     this.replays = 0;

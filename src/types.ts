@@ -2,6 +2,8 @@ export type PracticeLang = 'fr-CA' | 'en';
 export type UiLang = 'fr' | 'en' | 'zh';
 export type QuestionType = 'cardinal' | 'year' | 'phone' | 'time';
 export type TimeFormat = '12h' | '24h';
+/** How a time is read: plain numbers, or et quart / et demie / moins le quart … where they exist. */
+export type TimeStyle = 'digits' | 'colloquial';
 
 export interface Question {
   id: string;
@@ -18,6 +20,8 @@ export interface Question {
   rateFactor?: number;
   /** Effective time format, set for time questions only */
   timeFormat?: TimeFormat;
+  /** Style actually used (never 'mixed'), set for time questions only */
+  timeStyle?: TimeStyle;
 }
 
 /** What a single generator produces; the dispatcher fills in the rest of Question. */

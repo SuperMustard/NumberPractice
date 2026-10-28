@@ -6,6 +6,7 @@ import {
   QUESTION_TYPES,
   type Settings,
   TIME_FORMATS,
+  TIME_STYLES,
   UI_LANGS,
   browserStorage,
   cleanCardinalTiers,
@@ -167,6 +168,7 @@ export function mountApp(root: HTMLElement, tts: Tts | null): void {
   tierField.wrap.classList.add('field-tier');
   const cardinalTiers = tierChips();
   const formatField = field();
+  const styleField = field();
   const formatNotice = document.createElement('p');
   formatNotice.className = 'note selection-note';
   selection.append(
@@ -175,6 +177,7 @@ export function mountApp(root: HTMLElement, tts: Tts | null): void {
     tierField.wrap,
     cardinalTiers.wrap,
     formatField.wrap,
+    styleField.wrap,
     formatNotice,
   );
 
@@ -216,7 +219,7 @@ export function mountApp(root: HTMLElement, tts: Tts | null): void {
     cardinalTiers.allBtn.disabled = selected.length === CARDINAL_TIERS;
 
     tierField.label.textContent = t('select.tier');
-    const count = tierCount(settings.practiceLang, settings.type, settings.timeFormat);
+    const count = tierCount(settings.type);
     const tiers = Array.from({ length: count }, (_, i) => ({
       value: String(i + 1),
       label: tierLabel(settings.practiceLang, settings.type, i + 1),
@@ -225,12 +228,18 @@ export function mountApp(root: HTMLElement, tts: Tts | null): void {
 
     const isTime = settings.type === 'time';
     formatField.wrap.hidden = !isTime;
-    selection.classList.toggle('is-time', isTime);
+    styleField.wrap.hidden = !isTime;
     formatField.label.textContent = t('select.timeFormat');
     setOptions(
       formatField.select,
       TIME_FORMATS.map((f) => ({ value: f, label: t(`timeFormat.${f}`) })),
       settings.timeFormat,
+    );
+    styleField.label.textContent = t('select.timeStyle');
+    setOptions(
+      styleField.select,
+      TIME_STYLES.map((st) => ({ value: st, label: t(`timeStyle.${st}`) })),
+      settings.timeStyle,
     );
     formatNotice.hidden = !(isTime && settings.practiceLang === 'en' && settings.timeFormat === '24h');
     formatNotice.textContent = t('notice.en12hOnly');
@@ -283,6 +292,10 @@ export function mountApp(root: HTMLElement, tts: Tts | null): void {
   formatField.select.addEventListener(
     'change',
     onPracticeChange(() => ({ timeFormat: formatField.select.value as Settings['timeFormat'] })),
+  );
+  styleField.select.addEventListener(
+    'change',
+    onPracticeChange(() => ({ timeStyle: styleField.select.value as Settings['timeStyle'] })),
   );
 
   render();

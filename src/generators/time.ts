@@ -12,9 +12,8 @@ export function effectiveTimeFormat(lang: PracticeLang, format: TimeFormat): Tim
   return lang === 'en' ? '12h' : format;
 }
 
-export function timeTierCount(lang: PracticeLang, format: TimeFormat): number {
-  return effectiveTimeFormat(lang, format) === '24h' ? 2 : 3;
-}
+/** 1 on the hour, 2 five-minute steps, 3 any minute; the same for both clocks and both styles. */
+export const TIME_TIERS = 3;
 
 export function formatHHMM(h: number, m: number): string {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
@@ -27,9 +26,32 @@ function fem(words: string): string {
   return words.replace(/(^| )un$/, '$1une');
 }
 
-export function frTime24(h: number, m: number): string {
-  const hour = `${fem(frCardinal(h))} ${h <= 1 ? 'heure' : 'heures'}`;
-  return m === 0 ? hour : `${hour} ${fem(frCardinal(m))}`;
+/**
+ * et quart / et demie / moins le quart / moins dix, with the hour actually spoken.
+ * null when the minute has no colloquial form: 3:10 stays "trois heures dix", 3:37 never becomes "moins vingt-trois".
+ */
+function frColloquial(h: number, m: number): { spoken: number; minutes: string } | null {
+  if (m === 15) return { spoken: h, minutes: 'et quart' };
+  // demi after the masculine midi / minuit, demie after (feminine) heure(s)
+  if (m === 30) return { spoken: h, minutes: h % 12 === 0 ? 'et demi' : 'et demie' };
+  if (m >= 35 && m % 5 === 0) {
+    return { spoken: (h + 1) % 24, minutes: m === 45 ? 'moins le quart' : `moins ${frCardinal(60 - m)}` };
+  }
+  return null;
+}
+
+/** Colloquial 24h still says midi / minuit (midi et quart, minuit moins dix). */
+function frHour24(h: number, colloquial: boolean): string {
+  if (colloquial && h === 0) return 'minuit';
+  if (colloquial && h === 12) return 'midi';
+  return `${fem(frCardinal(h))} ${h <= 1 ? 'heure' : 'heures'}`;
+}
+
+/** 24h French. `colloquial`: quatorze heures et quart, quinze heures moins le quart. */
+export function frTime24(h: number, m: number, colloquial = false): string {
+  const c = colloquial ? frColloquial(h, m) : null;
+  const minutes = c ? c.minutes : m === 0 ? '' : fem(frCardinal(m));
+  return [frHour24(c ? c.spoken : h, colloquial), minutes].filter(Boolean).join(' ');
 }
 
 function frHour12(spoken: number): string {
@@ -47,23 +69,11 @@ function frSuffix12(spoken: number): string {
   return 'du soir';
 }
 
-/** 12h French. `colloquial` (tier 3) uses et quart / et demie / moins le quart / moins dix. */
+/** 12h French. `colloquial` uses et quart / et demie / moins le quart / moins dix. */
 export function frTime12(h: number, m: number, colloquial = false): string {
-  let spoken = h;
-  let minutes = m === 0 ? '' : fem(frCardinal(m));
-
-  if (colloquial && m !== 0) {
-    if (m >= 35) {
-      spoken = (h + 1) % 24;
-      minutes = m === 45 ? 'moins le quart' : `moins ${frCardinal(60 - m)}`;
-    } else if (m === 15) {
-      minutes = 'et quart';
-    } else if (m === 30) {
-      // demi after the masculine midi / minuit, demie after (feminine) heure(s)
-      minutes = spoken % 12 === 0 ? 'et demi' : 'et demie';
-    }
-  }
-
+  const c = colloquial ? frColloquial(h, m) : null;
+  const spoken = c ? c.spoken : h;
+  const minutes = c ? c.minutes : m === 0 ? '' : fem(frCardinal(m));
   return [frHour12(spoken), minutes, frSuffix12(spoken)].filter(Boolean).join(' ');
 }
 
@@ -83,7 +93,7 @@ function enSuffix(spoken: number): string {
   return 'in the evening';
 }
 
-/** Tier 3: quarter past two, half past two, twenty to three, quarter to noon, half past midnight. */
+/** Colloquial: five past two, quarter past two, half past two, twenty to three, quarter to noon, half past midnight. */
 function enColloquial(h: number, m: number): string {
   const to = m > 30;
   const spoken = to ? (h + 1) % 24 : h;
@@ -111,7 +121,8 @@ export function enTime12(h: number, m: number, colloquial = false): string {
     if (h === 12) return 'noon';
     return `${enHour12(h)} ${enAmPm(h)}`;
   }
-  if (colloquial) return enColloquial(h, m);
+  // "seven minutes to four" is unusual; only five-minute steps get the past / to form.
+  if (colloquial && m % 5 === 0) return enColloquial(h, m);
   const minutes = m < 10 ? `oh ${enBelow100(m)}` : enBelow100(m);
   return `${enHour12(h)} ${minutes} ${enAmPm(h)}`;
 }
@@ -122,15 +133,15 @@ export function generateTime(
   lang: PracticeLang,
   tier: number,
   format: TimeFormat,
+  colloquial: boolean,
   rng: Rng,
 ): QuestionBody {
   const h = randInt(rng, 0, 23);
-  const m = tier === 1 ? 0 : tier === 2 ? randInt(rng, 1, 59) : pick(rng, FIVE_MINUTE_STEPS);
-  const colloquial = tier === 3;
+  const m = tier === 1 ? 0 : tier === 2 ? pick(rng, FIVE_MINUTE_STEPS) : randInt(rng, 1, 59);
 
   let display: string;
   if (lang === 'en') display = enTime12(h, m, colloquial);
-  else if (format === '24h') display = frTime24(h, m);
+  else if (format === '24h') display = frTime24(h, m, colloquial);
   else display = frTime12(h, m, colloquial);
 
   return { answer: formatHHMM(h, m), display };

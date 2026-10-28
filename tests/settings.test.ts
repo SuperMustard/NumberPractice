@@ -47,6 +47,7 @@ describe('defaultSettings', () => {
       rate: 1,
       voiceURIs: {},
       timeFormat: '24h',
+      timeStyle: 'digits',
       replayLimit: 'unlimited',
     });
   });
@@ -63,6 +64,7 @@ describe('parseSettings', () => {
       rate: 1.2,
       voiceURIs: { 'fr-CA': 'x', en: 'y' },
       timeFormat: '12h',
+      timeStyle: 'mixed',
       replayLimit: 1,
     };
     expect(parseSettings(s)).toEqual(s);
@@ -78,7 +80,7 @@ describe('parseSettings', () => {
   });
 
   it('resets a tier that does not exist', () => {
-    expect(parseSettings({ type: 'time', timeFormat: '24h', tier: 3 }).tier).toBe(1);
+    expect(parseSettings({ type: 'time', timeStyle: 'digits', tier: 4 }).tier).toBe(1);
     expect(parseSettings({ type: 'year', tier: 4 }).tier).toBe(4);
     expect(parseSettings({ type: 'cardinal', tier: 7 }).tier).toBe(1);
     expect(parseSettings({ tier: 2.5 }).tier).toBe(1);
@@ -98,6 +100,13 @@ describe('parseSettings', () => {
     expect(parseSettings({ type: 'cardinal', tier: 4, cardinalTiers: [6] }).cardinalTiers).toEqual([6]);
   });
 
+  it('migrates time settings saved before the style option', () => {
+    expect(parseSettings({ type: 'time', timeFormat: '12h', tier: 3 })).toMatchObject({ tier: 2, timeStyle: 'colloquial' });
+    expect(parseSettings({ type: 'time', timeFormat: '24h', tier: 2 })).toMatchObject({ tier: 3, timeStyle: 'digits' });
+    expect(parseSettings({ type: 'time', tier: 1 })).toMatchObject({ tier: 1, timeStyle: 'digits' });
+    expect(parseSettings({ type: 'time', tier: 2, timeStyle: 'digits' }).tier).toBe(2);
+  });
+
   it('handles junk', () => {
     expect(parseSettings(null, 'fr')).toEqual(defaultSettings('fr'));
     expect(parseSettings('nope', 'fr')).toEqual(defaultSettings('fr'));
@@ -108,9 +117,8 @@ describe('normalizeTier', () => {
   it('resets when switching to a type or format with fewer tiers', () => {
     const s = { ...defaultSettings(), type: 'phone' as const, tier: 4 };
     expect(normalizeTier({ ...s, type: 'year' }).tier).toBe(4);
-    expect(normalizeTier({ ...s, type: 'time', timeFormat: '12h' }).tier).toBe(1);
-    expect(normalizeTier({ ...s, type: 'time', timeFormat: '12h', tier: 3 }).tier).toBe(3);
-    expect(normalizeTier({ ...s, type: 'time', timeFormat: '24h', tier: 3 }).tier).toBe(1);
+    expect(normalizeTier({ ...s, type: 'time' }).tier).toBe(1);
+    expect(normalizeTier({ ...s, type: 'time', timeFormat: '24h', tier: 3 }).tier).toBe(3);
   });
 });
 

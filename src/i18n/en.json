@@ -7,6 +7,7 @@
   "select.tier": "Level",
   "select.allTiers": "All",
   "select.timeFormat": "Clock",
+  "select.timeStyle": "Reading",
 
   "type.cardinal": "Numbers",
   "type.year": "Years",
@@ -15,6 +16,9 @@
 
   "timeFormat.24h": "24-hour",
   "timeFormat.12h": "12-hour",
+  "timeStyle.digits": "Numbers",
+  "timeStyle.colloquial": "Colloquial (quarter past, ten to…)",
+  "timeStyle.mixed": "Mixed",
   "notice.en12hOnly": "English times are practised in 12-hour format.",
 
   "tier.option": "{n} · {desc}",
@@ -35,8 +39,8 @@
   "tier.phone.3.en": "10 digits",
   "tier.phone.4": "1 800 numbers",
   "tier.time.1": "On the hour",
-  "tier.time.2": "Hours and minutes",
-  "tier.time.3": "Quarter past, half past, to…",
+  "tier.time.2": "Every 5 minutes",
+  "tier.time.3": "Any minute",
 
   "practice.start": "Start",
   "practice.startHint": "Turn your sound on. Listen, type what you hear, press Enter.",
